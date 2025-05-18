@@ -1,0 +1,16 @@
+[
+  {
+    "name": "arafa",
+    "address": "mono",
+    "age": 24,
+    "job": "eng",
+    "hobby": "bdan"
+  },
+  {
+    "name": "ahmed",
+    "address": "cairo",
+    "age": 25,
+    "job": "eng",
+    "hobby": "sleep"
+  }
+]

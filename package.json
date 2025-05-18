@@ -1,0 +1,18 @@
+{
+  "name": "read_from_excel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "list-files-in-dir": "^0.1.5",
+    "read-excel-file": "^5.8.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.18"
+  }
+}
