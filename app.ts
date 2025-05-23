@@ -20,25 +20,26 @@ function arraysEqual(a: any[], b: any[]) {
   }
   return true;
 }
-function checkExsistance(
-  outFiles: string[],
-  outFile: string,
-  outFilePath: string,
-  result: any[]
-) {
-  let jsonData = [];
-  if (outFiles.includes(outFile)) {
-    const data = fs.readFileSync(outFilePath, "utf-8");
-    jsonData = JSON.parse(data);
-    const valuesArray = jsonData.map((obj: any) => Object.values(obj));
-    // console.log(valuesArray);
-    result = result.filter(
-      (item) => !valuesArray.some((a2: []) => arraysEqual(item, a2))
-    );
-    console.log(result);
-  }
-  return { result, jsonData };
-}
+// function checkExsistance(
+//   outFiles: string[],
+//   outFile: string,
+//   outFilePath: string,
+//   result: any[]
+// ) {
+//   let jsonData = [];
+//   if (outFiles.includes(outFile)) {
+//     const data = fs.readFileSync(outFilePath, "utf-8");
+//     jsonData = JSON.parse(data);
+//     const valuesArray = jsonData.map((obj: any) => Object.values(obj));
+//     // console.log(valuesArray);
+//     result = result.filter(
+//       (item) => !valuesArray.some((a2: []) => arraysEqual(item, a2))
+//     );
+//     console.log(result);
+//   }
+//   return { result, jsonData };
+// }
+
 const inputDir = "./input";
 const outputDir = "./output";
 let outFiles: string[];
@@ -62,17 +63,17 @@ fs.readdir(inputDir, (err, files) => {
     readXlsxFile(inFilePath).then(async (rows) => {
       let headers = rows.shift() as string[];
       headers = toCamelCaseArray(headers);
-      //   let jsonData = [];
+        let jsonData = [];
       //   console.log(headers); // 1
       //   console.log(rows); // [2, 3, 4]
-      const { result, jsonData } = checkExsistance(
-        outFiles,
-        outFileName,
-        outFilePath,
-        rows
-      );
-      for (let i = 0; i < result.length; i++) {
-        const row = result[i];
+      // const { result, jsonData } = checkExsistance(
+      //   outFiles,
+      //   outFileName,
+      //   outFilePath,
+      //   rows
+      // );
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         // console.log(row); // [2, 3, 4]
 
         const obj: any = {};
