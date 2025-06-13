@@ -20,8 +20,11 @@ const convertExcel = (req, res, next) => {
     }
 };
 exports.convertExcel = convertExcel;
-const fetechJson = (req, res, next) => {
-    const jsonData = (0, convert_xlsx_1.fetechJsonFunc)(req.params.id);
+const fetechJson = async (req, res, next) => {
+    const jsonData = await (0, convert_xlsx_1.fetechJsonFunc)(req.params.id);
+    if (!jsonData) {
+        throw new Error(`File does not exist: ${req.params.id}`);
+    }
     res.status(200).json({
         data: jsonData,
     });

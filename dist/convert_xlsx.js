@@ -41,6 +41,9 @@ exports.toCamelCaseArray = toCamelCaseArray;
 exports.fetechJsonFunc = fetechJsonFunc;
 const node_1 = __importDefault(require("read-excel-file/node"));
 const fs = __importStar(require("fs"));
+const sqlite3_1 = __importDefault(require("sqlite3"));
+const sqlite_1 = require("sqlite");
+const validator_1 = require("./validators/validator");
 function toCamelCaseArray(strings) {
     return strings.map((str) => {
         const words = str.trim().split(/[\s_\-]+/); // split on space, underscore, dash
@@ -53,115 +56,47 @@ function toCamelCaseArray(strings) {
             .join("");
     });
 }
-function arraysEqual(a, b) {
-    if (a.length !== b.length)
-        return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] !== b[i])
-            return false;
-    }
-    return true;
-}
-// function checkExsistance(
-//   outFiles: string[],
-//   outFile: string,
-//   outFilePath: string,
-//   result: any[]
-// ) {
-//   let jsonData = [];
-//   if (outFiles.includes(outFile)) {
-//     const data = fs.readFileSync(outFilePath, "utf-8");
-//     jsonData = JSON.parse(data);
-//     const valuesArray = jsonData.map((obj: any) => Object.values(obj));
-//     // console.log(valuesArray);
-//     result = result.filter(
-//       (item) => !valuesArray.some((a2: []) => arraysEqual(item, a2))
-//     );
-//     console.log(result);
-//   }
-//   return { result, jsonData };
-// }
-const inputDir = "./input";
-const outputDir = "./output";
-let outFiles;
 const convertExcelFunc = async function (inFilePath, outFilePath) {
-    // fs.readdir(outputDir, (error, files) => {
-    //   outFiles = files;
-    // });
-    // fs.readdir(inputDir, (err, files) => {
-    //   if (err) {
-    //     console.error("Error reading directory:", err);
-    //     return;
-    //   }
-    //   const xlsxFiles = files.filter((file) => file.endsWith(".xlsx"));
-    // xlsxFiles.forEach((file) => {
-    // const inFilePath = path.join(inputDir, file);
-    // const outFileName = `${file.split("xlsx")[0]}json`;
-    // const outFilePath = path.join(outputDir, outFileName);
+    const db = await (0, sqlite_1.open)({
+        filename: `./output_db/${outFilePath.split("xlsx")[0]}db`, // Specify the database file
+        driver: sqlite3_1.default.Database,
+    });
+    const tableName = outFilePath.split(".xlsx")[0];
     (0, node_1.default)(inFilePath).then(async (rows) => {
         let headers = rows.shift();
         headers = toCamelCaseArray(headers);
-        let jsonData = [];
-        //   console.log(headers); // 1
-        //   console.log(rows); // [2, 3, 4]
-        // const { result, jsonData } = checkExsistance(
-        //   outFiles,
-        //   outFileName,
-        //   outFilePath,
-        //   rows
-        // );
+        const columns = headers.map((header) => `\'${header}\'`).join(", "); // Wrap each header in backticks
+        let sql = `CREATE TABLE IF NOT EXISTS ${tableName} (${columns});`;
+        await db.run(sql);
+        let rowData;
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
-            // console.log(row); // [2, 3, 4]
-            const obj = {};
-            headers.forEach((header, index) => {
-                obj[header] = row[index];
-            });
-            jsonData.push(obj);
-            // console.log(jsonData);
+            rowData = row.map((row) => `\'${row}\'`).join(", "); // Wrap each header in backticks
+            sql = `INSERT INTO ${tableName} VALUES (${rowData})`;
+            await db.run(sql);
         }
-        const outJson = JSON.stringify(jsonData, null, 2);
-        fs.writeFileSync(`output_json/${outFilePath.split("xlsx")[0]}json`, outJson, "utf-8");
+        fs.unlink(inFilePath, (err) => {
+            if (err) {
+                console.error("Failed to delete file:", err);
+            }
+            else {
+                console.log("File deleted successfully");
+            }
+        });
     });
-    // }
-    // );
-    // });
 };
 exports.convertExcelFunc = convertExcelFunc;
-// async function askFileName(): Promise<string> {
-//   const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//   });
-//   return new Promise((resolve) => {
-//     rl.question("Enter file name: ", (answer) => {
-//       rl.close();
-//       resolve(answer.trim());
-//     });
-//   });
-// }
-// const dispalyReqFile = async function () {
-//   const args = process.argv.slice(2);
-//   let fileName: string = args[0];
-//   if (!fileName) {
-//     fileName = await askFileName();
-//   }
-//   //  else {
-//   //   // fileName = args[0];
-//   //   console.log(fileName);
-//   // }
-//   const outFilePath = path.join(outputDir, fileName! + ".json");
-//   if (fs.existsSync(outFilePath)) {
-//     const data = fs.readFileSync(outFilePath, "utf-8");
-//     const jsonData = JSON.parse(data);
-//     console.log(jsonData);
-//   }
-// };
-// convertExcel().then(() => {
-//   dispalyReqFile();
-// });
-function fetechJsonFunc(fileName) {
-    const data = fs.readFileSync(`output_json/${fileName}.json`, "utf-8");
-    const jsonData = JSON.parse(data);
-    return jsonData;
+async function fetechJsonFunc(fileName) {
+    if ((0, validator_1.fileExistsValidator)(fileName)) {
+        const db = await (0, sqlite_1.open)({
+            filename: `./output_db/${fileName}.db`, // Specify the database file
+            driver: sqlite3_1.default.Database,
+        });
+        const sql = `SELECT * FROM ${fileName};`;
+        const row = await db.all(sql);
+        return row;
+    }
+    else {
+        return false;
+    }
 }
